@@ -1,0 +1,69 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+build
+.next
+
+# production
+/build
+
+# PostgreSQL data (bind mount in docker-compose; do not commit)
+/data/postgres/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (do not commit; .env.example is the template)
+.env
+.env.local
+.env.prod
+.env.*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# eslint
+.eslintcache
+
+#
+.docs
+.cursor
+.vscode
+dist
+/backendV11/.cursor
+/backendV11/.vscode
+/backendV11/docs/
+/frontendV11/.cursor
+/frontendV11/.vscode
+/frontendV11/docs/
+/frontend/logs/
+/backend/logs/
+/logs/

@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Пользователи Telegram.
+model User {
+  id        BigInt   @id @map("id")
+  username  String?  @map("username")
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  channelSubscriptions ChannelSubscriber[]
+  ban                 UserBan?
+  botInteractions     BotInteraction[]
+
+  @@map("users")
+}
+
+/// Отслеживаемые каналы/чаты.
+model Channel {
+  id        BigInt   @id @map("id")
+  title     String?  @map("title")
+  username  String?  @map("username")
+  type      String?  @map("type")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  subscribers     ChannelSubscriber[]
+  botInteractions BotInteraction[]
+
+  @@map("channels")
+}
+
+/// Подписка пользователя на канал. leftAt = null → подписан, иначе отписан.
+model ChannelSubscriber {
+  channelId        BigInt    @map("channel_id")
+  userId           BigInt    @map("user_id")
+  joinedAt         DateTime  @default(now()) @map("joined_at")
+  leftAt           DateTime? @map("left_at")
+  subscribeCount   Int       @default(0) @map("subscribe_count")
+  unsubscribeCount Int       @default(0) @map("unsubscribe_count")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([channelId, userId])
+  @@index([channelId])
+  @@index([userId])
+  @@map("channel_subscribers")
+}
+
+/// Обращения пользователей к боту (private chat).
+model BotInteraction {
+  id        String   @id @default(uuid()) @map("id") @db.Uuid
+  channelId BigInt   @map("channel_id")
+  userId    BigInt   @map("user_id")
+  type      String   @map("type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@index([userId])
+  @@map("bot_interactions")
+}
+
+/// Забаненные пользователи (глобально).
+model UserBan {
+  userId   BigInt   @id @map("user_id")
+  reason   String?  @map("reason")
+  bannedAt DateTime @default(now()) @map("banned_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_bans")
+}
