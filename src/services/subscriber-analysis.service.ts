@@ -36,11 +36,13 @@ export const SubscriberAnalysisService = {
         where: { id: userId },
         create: {
           id: userId,
+          telegramId: userId,
           username: user.username ?? null,
           firstName: user.first_name ?? null,
           lastName: user.last_name ?? null,
         },
         update: {
+          telegramId: userId,
           username: user.username ?? undefined,
           firstName: user.first_name ?? undefined,
           lastName: user.last_name ?? undefined,

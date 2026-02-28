@@ -51,11 +51,13 @@ export const BotUsersService = {
         where: { id: userId },
         create: {
           id: userId,
+          telegramId: userId,
           username: from.username ?? null,
           firstName: from.first_name ?? null,
           lastName: from.last_name ?? null,
         },
         update: {
+          telegramId: userId,
           username: from.username ?? undefined,
           firstName: from.first_name ?? undefined,
           lastName: from.last_name ?? undefined,

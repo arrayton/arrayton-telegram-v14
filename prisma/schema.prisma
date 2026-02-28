@@ -8,8 +8,9 @@ datasource db {
 
 /// Пользователи Telegram.
 model User {
-  id        BigInt   @id @map("id")
-  username  String?  @map("username")
+  id         BigInt   @id @map("id")
+  telegramId BigInt   @unique @map("telegram_id")
+  username   String?  @map("username")
   firstName String?  @map("first_name")
   lastName  String?  @map("last_name")
   createdAt DateTime @default(now()) @map("created_at")
