@@ -12,7 +12,7 @@ RUN pnpm install --frozen-lockfile
 
 # --- Production ---
 FROM node:24-alpine AS runner
-RUN apk add --no-cache dumb-init
+RUN corepack enable pnpm && apk add --no-cache dumb-init
 ENV NODE_ENV=production
 WORKDIR /app
 
