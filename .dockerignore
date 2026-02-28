@@ -1,0 +1,14 @@
+node_modules
+dist
+*.log
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+.cursor
+.vscode
+*.md
+.pnpm-debug.log*
+.DS_Store
+*.tsbuildinfo
