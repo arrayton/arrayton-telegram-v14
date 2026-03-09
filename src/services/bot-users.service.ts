@@ -43,10 +43,14 @@ export const BotUsersService = {
     });
   },
 
-  async recordInteraction(params: RecordInteractionParams): Promise<void> {
+  async recordInteraction(params: RecordInteractionParams): Promise<{ isNewUser: boolean }> {
     const { userId, from, botChannelId, type } = params;
 
+    let isNewUser = false;
     await prisma.$transaction(async (tx) => {
+      const existing = await tx.user.findUnique({ where: { id: userId } });
+      isNewUser = existing === null;
+
       await tx.user.upsert({
         where: { id: userId },
         create: {
@@ -67,5 +71,6 @@ export const BotUsersService = {
         data: { channelId: botChannelId, userId, type },
       });
     });
+    return { isNewUser };
   },
 };

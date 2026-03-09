@@ -1,7 +1,14 @@
 import { Bot } from 'grammy';
 import { config } from '@/config/config';
-import { SubscriberAnalysisService, BotUsersService } from '@/services';
-import { handleStart, openAppKeyboard } from '@/commands';
+import { SubscriberAnalysisService, BotUsersService, NotificationService } from '@/services';
+import {
+  handleStart,
+  openAppKeyboard,
+  requireAdmin,
+  handleUsersBot,
+  handleChannels,
+  handleChannelSubs,
+} from '@/commands';
 
 const bot = new Bot(config.BOT_TOKEN);
 
@@ -15,21 +22,36 @@ await BotUsersService.initBotChannel({
   username: botInfo.username,
 });
 
+const formatUserLabel = (user: { username?: string | null; first_name?: string | null; last_name?: string | null; id: number }) => {
+  const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || '—';
+  const mention = user.username ? `@${user.username}` : `id: ${user.id}`;
+  return `${name} (${mention})`;
+};
+
 bot.use(async (ctx, next) => {
   if (ctx.chat?.type === 'private' && ctx.from && ctx.message) {
     const userId = BigInt(ctx.from.id);
     const type = ctx.message.entities?.some((e) => e.type === 'bot_command') ? 'command' : 'message';
-    await BotUsersService.recordInteraction({
+    const { isNewUser } = await BotUsersService.recordInteraction({
       userId,
       from: ctx.from,
       botChannelId,
       type,
     });
+    if (isNewUser) {
+      await NotificationService.sendToAdmins(
+        bot,
+        `🆕 <b>Новый пользователь в боте</b>\n${formatUserLabel(ctx.from)}`
+      );
+    }
   }
   return next();
 });
 
 bot.command('start', handleStart);
+bot.command('users_bot', requireAdmin, handleUsersBot);
+bot.command('channels', requireAdmin, handleChannels);
+bot.command('channel_subs', requireAdmin, handleChannelSubs);
 bot.on('message', async (ctx) => {
   if (ctx.chat?.type !== 'private') return;
   await ctx.reply('Нажми кнопку ниже, чтобы открыть платформу 👇', { reply_markup: openAppKeyboard });
@@ -48,12 +70,19 @@ bot.on('chat_member', async (ctx) => {
     username: 'username' in chat ? chat.username ?? undefined : undefined,
   };
 
-  await SubscriberAnalysisService.handleChatMemberUpdate({
+  const result = await SubscriberAnalysisService.handleChatMemberUpdate({
     oldStatus,
     newStatus,
     chat: chatData,
     user,
   });
+  if (result.joined && result.user && result.chat) {
+    const channelLabel = result.chat.title ?? result.chat.username ?? String(result.chat.id);
+    await NotificationService.sendToAdmins(
+      bot,
+      `📢 <b>Новая подписка на канал</b>\nПользователь: ${formatUserLabel(result.user)}\nКанал: ${channelLabel}`
+    );
+  }
 });
 
 bot.start({

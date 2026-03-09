@@ -21,12 +21,18 @@ interface HandleChatMemberParams {
   user: TelegramUser;
 }
 
+export interface HandleChatMemberResult {
+  joined: boolean;
+  user?: TelegramUser;
+  chat?: TelegramChat;
+}
+
 /**
  * Сервис анализа подписчиков каналов.
  * Обрабатывает события join/leave, сохраняет User, Channel, ChannelSubscriber.
  */
 export const SubscriberAnalysisService = {
-  async handleChatMemberUpdate(params: HandleChatMemberParams): Promise<void> {
+  async handleChatMemberUpdate(params: HandleChatMemberParams): Promise<HandleChatMemberResult> {
     const { oldStatus, newStatus, chat, user } = params;
     const chatId = BigInt(chat.id);
     const userId = BigInt(user.id);
@@ -92,5 +98,13 @@ export const SubscriberAnalysisService = {
         console.log('➖ Отписался:', user.id, 'из канала', chat.id);
       }
     });
+
+    const joined =
+      (oldStatus === 'left' || oldStatus === 'kicked') &&
+      (newStatus === 'member' || newStatus === 'restricted');
+    return {
+      joined,
+      ...(joined && { user, chat }),
+    };
   },
 };
