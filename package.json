@@ -8,17 +8,17 @@
 	"license": "ISC",
 	"description": "",
 	"scripts": {
-		"dev": "nodemon --delay 3 --exec tsx src/index.ts",
+		"dev": "nodemon --delay 3 --exec \"node --import tsx src/index.ts\"",
 		"build:dev": "tsc",
-		"start:prod": "tsx src/index.ts",
+		"start:prod": "node --import tsx src/index.ts",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
 		"prisma:deploy": "prisma migrate deploy",
 		"prisma:push": "prisma migrate push",
-		"prisma:seed": "tsx prisma/seed/index.ts",
+		"prisma:seed": "node --import tsx prisma/seed/index.ts",
 		"prisma:studio": "prisma studio",
 		"prisma:reset": "prisma migrate reset",
-		"db:test": "tsx scripts/test-db-connection.ts"
+		"db:test": "node --import tsx scripts/test-db-connection.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^25.3.2",
