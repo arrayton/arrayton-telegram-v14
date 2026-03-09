@@ -32,7 +32,7 @@ RUN chown -R telegram:nodejs /app
 USER telegram
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD pgrep -f "tsx src/index.ts" || exit 1
+  CMD pgrep -f "src/index.ts" || exit 1
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "--loader", "tsx", "src/index.ts"]
+CMD ["node", "--import", "tsx", "src/index.ts"]
