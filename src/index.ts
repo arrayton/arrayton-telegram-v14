@@ -12,6 +12,24 @@ import {
 
 const bot = new Bot(config.BOT_TOKEN);
 
+const DEFAULT_MENU = [{ command: 'start', description: 'Старт / открыть платформу' }];
+
+const ADMIN_MENU = [
+  ...DEFAULT_MENU,
+  { command: 'users_bot', description: 'Список пользователей бота' },
+  { command: 'channels', description: 'Список каналов' },
+  { command: 'channel_subs', description: 'Подписчики канала: /channel_subs <id>' },
+];
+
+async function setupCommands(): Promise<void> {
+  await bot.api.setMyCommands(DEFAULT_MENU);
+  for (const adminId of config.ADMIN_TELEGRAM_IDS) {
+    await bot.api.setMyCommands(ADMIN_MENU, {
+      scope: { type: 'chat', chat_id: adminId },
+    });
+  }
+}
+
 const botInfo = await bot.api.getMe();
 const botChannelId = BigInt(botInfo.id);
 const botTitle = config.BOT_USERNAME ?? botInfo.username ?? 'ArrayTonBot';
@@ -21,6 +39,8 @@ await BotUsersService.initBotChannel({
   title: botTitle,
   username: botInfo.username,
 });
+
+await setupCommands();
 
 const formatUserLabel = (user: { username?: string | null; first_name?: string | null; last_name?: string | null; id: number }) => {
   const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || '—';
