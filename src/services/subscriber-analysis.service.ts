@@ -37,8 +37,8 @@ export const SubscriberAnalysisService = {
     const chatId = BigInt(chat.id);
     const userId = BigInt(user.id);
 
-    await prisma.$transaction(async (tx) => {
-      await tx.user.upsert({
+    try {
+      await prisma.user.upsert({
         where: { id: userId },
         create: {
           id: userId,
@@ -54,8 +54,12 @@ export const SubscriberAnalysisService = {
           lastName: user.last_name ?? undefined,
         },
       });
+    } catch (err) {
+      console.warn(`Failed to upsert user ${userId}:`, err);
+    }
 
-      await tx.channel.upsert({
+    try {
+      await prisma.channel.upsert({
         where: { id: chatId },
         create: {
           id: chatId,
@@ -69,16 +73,20 @@ export const SubscriberAnalysisService = {
           type: chat.type ?? undefined,
         },
       });
+    } catch (err) {
+      console.warn(`Failed to upsert channel ${chatId}:`, err);
+    }
 
-      const joined =
-        (oldStatus === 'left' || oldStatus === 'kicked') &&
-        (newStatus === 'member' || newStatus === 'restricted');
-      const left =
-        (oldStatus === 'member' || oldStatus === 'restricted') &&
-        (newStatus === 'left' || newStatus === 'kicked');
+    const joined =
+      (oldStatus === 'left' || oldStatus === 'kicked') &&
+      (newStatus === 'member' || newStatus === 'restricted');
+    const left =
+      (oldStatus === 'member' || oldStatus === 'restricted') &&
+      (newStatus === 'left' || newStatus === 'kicked');
 
-      if (joined) {
-        await tx.channelSubscriber.upsert({
+    if (joined) {
+      try {
+        await prisma.channelSubscriber.upsert({
           where: { channelId_userId: { channelId: chatId, userId } },
           create: { channelId: chatId, userId, subscribeCount: 1 },
           update: {
@@ -88,20 +96,23 @@ export const SubscriberAnalysisService = {
           },
         });
         console.log('➕ Подписался:', user.id, 'в канал', chat.id);
+      } catch (err) {
+        console.warn(`Failed to upsert subscriber ${userId} for channel ${chatId}:`, err);
       }
+    }
 
-      if (left) {
-        await tx.channelSubscriber.updateMany({
+    if (left) {
+      try {
+        await prisma.channelSubscriber.updateMany({
           where: { channelId: chatId, userId },
           data: { leftAt: new Date(), unsubscribeCount: { increment: 1 } },
         });
         console.log('➖ Отписался:', user.id, 'из канала', chat.id);
+      } catch (err) {
+        console.warn(`Failed to update left subscriber ${userId} for channel ${chatId}:`, err);
       }
-    });
+    }
 
-    const joined =
-      (oldStatus === 'left' || oldStatus === 'kicked') &&
-      (newStatus === 'member' || newStatus === 'restricted');
     return {
       joined,
       ...(joined && { user, chat }),
